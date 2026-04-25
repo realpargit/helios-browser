@@ -1,0 +1,3 @@
+- [Local AI roadmap](project_local_ai_todo.md) — Phase 1 (command bar) shipped; Phase 2 (Qwen2.5-0.5B local LLM) is next when user accepts native-module tradeoff
+- [Website download snippet pending](project_website_download_snippet.md) — owe user a paste-ready Download-button snippet for their website
+- [Browser publish checklist](project_publish_checklist.md) — Option A (public repo) + unsigned chosen 2026-04-25; blocked on repo name; full step-by-step to-do saved

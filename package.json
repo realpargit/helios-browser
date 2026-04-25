@@ -1,0 +1,82 @@
+{
+  "name": "helios-browser",
+  "version": "0.1.0",
+  "description": "A fast, lightweight, production-grade desktop browser",
+  "main": "dist-electron/main.js",
+  "author": "realpargit",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "electron:build": "vite build && electron-builder",
+    "electron:publish": "vite build && electron-builder --publish always",
+    "typecheck": "tsc --noEmit"
+  },
+  "build": {
+    "appId": "com.realpargit.helios",
+    "productName": "Helios",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Helios-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Helios"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "realpargit",
+      "repo": "helios-browser",
+      "releaseType": "release"
+    }
+  },
+  "keywords": [
+    "browser",
+    "electron",
+    "desktop"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "^8.0.0",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-electron": "^0.28.0",
+    "vite-plugin-electron-renderer": "^0.14.0",
+    "wait-on": "^7.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "electron-updater": "^6.8.3",
+    "express": "^5.2.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "zustand": "^4.4.0"
+  }
+}

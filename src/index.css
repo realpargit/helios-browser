@@ -1,0 +1,150 @@
+@font-face {
+  font-family: 'Williwaw';
+  src: url('./assets/fonts/Williwaw-Book.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-0: #0f0f0f;
+  --bg-1: #141414;
+  --bg-2: #1a1a1a;
+  --bg-3: #222;
+  --bg-4: #282828;
+  --border-0: #1e1e1e;
+  --border-1: #2a2a2a;
+  --border-2: #363636;
+  --text-0: #e8e8e8;
+  --text-1: #a0a0a0;
+  --text-2: #606060;
+  --accent: #4a9eff;
+  --accent-dim: rgba(74, 158, 255, 0.12);
+  --accent-glow: rgba(74, 158, 255, 0.22);
+  --danger: #f05050;
+  --success: #3ecf6e;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-fast: 0.12s cubic-bezier(0, 0, 0.2, 1);
+  --transition-mid: 0.2s cubic-bezier(0, 0, 0.2, 1);
+  --transition-slow: 0.3s cubic-bezier(0, 0, 0.2, 1);
+
+  font-family: 'Williwaw', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-0);
+  background: var(--bg-0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+}
+
+html, body, #root { height: 100%; overflow: hidden; }
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast), transform var(--transition-fast);
+  flex-shrink: 0;
+}
+button:hover { background: var(--bg-2); }
+button:active { opacity: 0.7; transform: scale(0.94); }
+button:disabled { opacity: 0.35; cursor: default; }
+button:disabled:hover { background: none; }
+button:disabled:active { transform: none; }
+
+input {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-sm);
+  color: var(--text-0);
+  font: inherit;
+  outline: none;
+  padding: 0 10px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+input::placeholder { color: var(--text-2); }
+
+select {
+  background: var(--bg-3);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-sm);
+  color: var(--text-0);
+  font: inherit;
+  outline: none;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+select:focus { border-color: var(--accent); }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; transition: background 0.15s; }
+::-webkit-scrollbar-thumb:hover { background: #484848; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes tabIn {
+  0%   { opacity: 0; transform: scaleX(0.4) translateY(6px); filter: blur(2px); }
+  60%  { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: scaleX(1) translateY(0); }
+}
+
+@keyframes loadBar {
+  0%   { left: -50%; width: 50%; }
+  100% { left: 110%; width: 50%; }
+}
+
+@keyframes shimmerBar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
