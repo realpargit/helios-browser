@@ -1,6 +1,6 @@
 {
   "name": "helios-browser",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A fast, lightweight, production-grade desktop browser",
   "main": "dist-electron/main.js",
   "author": "realpargit",
@@ -33,7 +33,8 @@
           ]
         }
       ],
-      "artifactName": "Helios-Setup-${version}.${ext}"
+      "icon": "build/icon.ico",
+      "artifactName": "Helios-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -41,7 +42,9 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Helios"
+      "shortcutName": "Helios",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "publish": {
       "provider": "github",

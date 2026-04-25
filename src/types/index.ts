@@ -41,6 +41,7 @@ export interface Download {
 export type ThemeName =
   | 'google' | 'dark' | 'light' | 'midnight' | 'dracula' | 'nord'
   | 'sepia' | 'ocean' | 'forest' | 'rose' | 'high-contrast'
+  | 'ember' | 'amber' | 'sunset' | 'crimson' | 'arctic' | 'monokai'
 
 export interface Settings {
   // General

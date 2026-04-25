@@ -120,6 +120,66 @@ export const THEMES: Record<ThemeName, { label: string; vars: ThemeVars }> = {
       '--danger': '#ff5a7a', '--success': '#6fcf97'
     }
   },
+  ember: {
+    label: 'Ember',
+    vars: {
+      '--bg-0': '#0a0a0a', '--bg-1': '#121008', '--bg-2': '#1a160f', '--bg-3': '#241d12', '--bg-4': '#2e2516',
+      '--border-0': '#1a160f', '--border-1': '#2c2417', '--border-2': '#453621',
+      '--text-0': '#f5e9d8', '--text-1': '#bfa385', '--text-2': '#7a6650',
+      '--accent': '#ff8c28', '--accent-dim': 'rgba(255,140,40,0.13)', '--accent-glow': 'rgba(255,140,40,0.32)',
+      '--danger': '#ff5e1a', '--success': '#ffa84a'
+    }
+  },
+  amber: {
+    label: 'Amber',
+    vars: {
+      '--bg-0': '#1a1410', '--bg-1': '#221a14', '--bg-2': '#2c221a', '--bg-3': '#382c22', '--bg-4': '#46382c',
+      '--border-0': '#2c221a', '--border-1': '#46382c', '--border-2': '#5e4a38',
+      '--text-0': '#fbe7c2', '--text-1': '#d4a76a', '--text-2': '#8a6a40',
+      '--accent': '#ffbe55', '--accent-dim': 'rgba(255,190,85,0.14)', '--accent-glow': 'rgba(255,190,85,0.3)',
+      '--danger': '#ff7a55', '--success': '#c4d97a'
+    }
+  },
+  sunset: {
+    label: 'Sunset',
+    vars: {
+      '--bg-0': '#1a0e1f', '--bg-1': '#22132a', '--bg-2': '#2c1a36', '--bg-3': '#382244', '--bg-4': '#462c54',
+      '--border-0': '#2c1a36', '--border-1': '#462c54', '--border-2': '#5e3d70',
+      '--text-0': '#fce4d6', '--text-1': '#d8a8b8', '--text-2': '#8a6a78',
+      '--accent': '#ff7e6a', '--accent-dim': 'rgba(255,126,106,0.14)', '--accent-glow': 'rgba(255,126,106,0.3)',
+      '--danger': '#ff556e', '--success': '#ffba7a'
+    }
+  },
+  crimson: {
+    label: 'Crimson',
+    vars: {
+      '--bg-0': '#150708', '--bg-1': '#1d0a0c', '--bg-2': '#260e11', '--bg-3': '#341318', '--bg-4': '#421820',
+      '--border-0': '#260e11', '--border-1': '#421820', '--border-2': '#5e2230',
+      '--text-0': '#f4dada', '--text-1': '#c08a8a', '--text-2': '#7a5050',
+      '--accent': '#e8434f', '--accent-dim': 'rgba(232,67,79,0.14)', '--accent-glow': 'rgba(232,67,79,0.3)',
+      '--danger': '#ff7060', '--success': '#7fcf6f'
+    }
+  },
+  arctic: {
+    label: 'Arctic',
+    vars: {
+      '--bg-0': '#f4f8fb', '--bg-1': '#eaf1f7', '--bg-2': '#dde8f0', '--bg-3': '#cfdde8', '--bg-4': '#bccfdd',
+      '--border-0': '#dde8f0', '--border-1': '#bccfdd', '--border-2': '#9bb6c8',
+      '--text-0': '#0d2230', '--text-1': '#3d5e72', '--text-2': '#7a93a3',
+      '--accent': '#0a96d4', '--accent-dim': 'rgba(10,150,212,0.13)', '--accent-glow': 'rgba(10,150,212,0.26)',
+      '--danger': '#d93025', '--success': '#1e8e3e'
+    }
+  },
+  monokai: {
+    label: 'Monokai',
+    vars: {
+      '--bg-0': '#272822', '--bg-1': '#2d2e26', '--bg-2': '#34352d', '--bg-3': '#3d3e36', '--bg-4': '#4a4b41',
+      '--border-0': '#34352d', '--border-1': '#49483e', '--border-2': '#75715e',
+      '--text-0': '#f8f8f2', '--text-1': '#cfcfc2', '--text-2': '#75715e',
+      '--accent': '#a6e22e', '--accent-dim': 'rgba(166,226,46,0.14)', '--accent-glow': 'rgba(166,226,46,0.28)',
+      '--danger': '#f92672', '--success': '#a6e22e'
+    }
+  },
   'high-contrast': {
     label: 'High Contrast',
     vars: {

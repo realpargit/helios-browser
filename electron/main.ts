@@ -396,6 +396,7 @@ function createWindow() {
     minHeight: 500,
     frame: false,
     backgroundColor: '#0f0f0f',
+    icon: join(__dirname, '../build/icon.ico'),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
