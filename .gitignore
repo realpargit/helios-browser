@@ -1,11 +1,53 @@
+# Dependencies
 node_modules/
+
+# Build outputs
 dist/
 dist-electron/
 release/
+out/
+build/
+
+# Environment / secrets — never commit these
 .env
 .env.local
+.env.*.local
+.env.development
+.env.production
+*.pem
+*.key
+
+# Logs
 *.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+
+# Local AI / dev artifacts
+.claude/
+*.claude
+claude.md
+CLAUDE.md
+plans/
+*.plan.md
+*.prompt.md
+ai/
+ai-cache/
+.tmp/
+temp/
+memory/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Electron user data (only relevant if anything ever lands at the repo root)
+helios-userdata/

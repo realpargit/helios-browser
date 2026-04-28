@@ -141,6 +141,67 @@ select:focus { border-color: var(--accent); }
   100% { transform: translateX(300%); }
 }
 
+@keyframes tabOut {
+  0%   { opacity: 1; transform: scaleX(1); filter: blur(0); }
+  100% { opacity: 0; transform: scaleX(0.4) translateY(4px); filter: blur(2px); }
+}
+
+@keyframes spinOnce { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@keyframes pulseGlow {
+  0%   { box-shadow: 0 0 0 0 var(--accent-glow); }
+  70%  { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes plusBounce {
+  0%   { transform: scale(1) rotate(0deg); }
+  50%  { transform: scale(1.18) rotate(90deg); }
+  100% { transform: scale(1) rotate(180deg); }
+}
+
+@keyframes addrFocus {
+  0%   { transform: scaleX(0.985); }
+  100% { transform: scaleX(1); }
+}
+
+/* Animations on the new-tab button */
+.helios-newtab-btn { transition: transform 0.2s var(--ease-bounce), color var(--transition-fast), background var(--transition-fast); }
+.helios-newtab-btn:hover { transform: rotate(90deg); color: var(--accent); }
+.helios-newtab-btn:active { transform: rotate(180deg) scale(0.92); }
+
+/* Address bar focus animation */
+.helios-omnibox-focused { animation: addrFocus 0.18s var(--ease-out); }
+
+/* Reload spin when triggered */
+.helios-reload-spin { animation: spinOnce 0.5s var(--ease-in-out); }
+
+/* Nav button (back/forward/reload) tap pulse */
+.helios-navbtn:active { animation: pulseGlow 0.35s var(--ease-out); }
+
+/* ── Animation gating via root data attrs ──────────────────────────────── */
+:root[data-anim-master="off"] *,
+:root[data-anim-master="off"] *::before,
+:root[data-anim-master="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+:root[data-anim-tabs="off"] [data-anim-target="tab"] {
+  animation: none !important;
+}
+:root[data-anim-tabs="off"] .helios-newtab-btn { transition: none !important; }
+:root[data-anim-tabs="off"] .helios-newtab-btn:hover { transform: none; }
+
+:root[data-anim-addr="off"] [data-anim-target="addr"],
+:root[data-anim-addr="off"] .helios-omnibox-focused { animation: none !important; }
+
+:root[data-anim-btn="off"] .helios-navbtn:active,
+:root[data-anim-btn="off"] .helios-reload-spin { animation: none !important; }
+:root[data-anim-btn="off"] button:active { transform: none !important; }
+
+:root[data-anim-panel="off"] [data-anim-target="panel"] { animation: none !important; transition: none !important; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

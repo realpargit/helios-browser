@@ -11,7 +11,7 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
 let store: Storage
 let authManager: GoogleAuthManager
-const CHROME_HEIGHT = 76
+const CHROME_HEIGHT = 112
 
 // ── Tab management ────────────────────────────────────────────────────────
 interface TabState {
@@ -28,17 +28,19 @@ interface TabState {
 const tabs = new Map<string, TabState>()
 let activeTabId: string | null = null
 let mainWindow: BrowserWindow | null = null
-let sidebarWidth = 48
+let sidebarWidth = 0
+let topInset = 0
 let contentHidden = false
 
 function getTabBounds() {
-  if (!mainWindow) return { x: sidebarWidth, y: CHROME_HEIGHT, width: 800, height: 600 }
+  const y = CHROME_HEIGHT + topInset
+  if (!mainWindow) return { x: sidebarWidth, y, width: 800, height: 600 }
   const [w, h] = mainWindow.getContentSize()
   return {
     x: sidebarWidth,
-    y: CHROME_HEIGHT,
+    y,
     width: Math.max(1, w - sidebarWidth),
-    height: Math.max(1, h - CHROME_HEIGHT)
+    height: Math.max(1, h - y)
   }
 }
 
@@ -94,18 +96,23 @@ function makeTab(id: string, url?: string): TabState {
     broadcastTabUpdate(id)
   })
 
+  const isVirtual = () => tab.url.startsWith('about:')
+
   wc.on('did-stop-loading', () => {
     tab.isLoading = false
-    tab.url = wc.getURL()
-    tab.canGoBack = wc.canGoBack()
-    tab.canGoForward = wc.canGoForward()
-    broadcastTabUpdate(id)
-    if (tab.url && !tab.url.startsWith('about:')) {
-      store.addHistory(tab.url, tab.title, tab.favicon)
+    if (!isVirtual()) {
+      tab.url = wc.getURL()
+      tab.canGoBack = wc.canGoBack()
+      tab.canGoForward = wc.canGoForward()
+      if (tab.url && !tab.url.startsWith('about:')) {
+        store.addHistory(tab.url, tab.title, tab.favicon)
+      }
     }
+    broadcastTabUpdate(id)
   })
 
   wc.on('did-navigate', (_, url) => {
+    if (isVirtual() && url === 'about:blank') return
     tab.url = url
     tab.canGoBack = wc.canGoBack()
     tab.canGoForward = wc.canGoForward()
@@ -113,6 +120,7 @@ function makeTab(id: string, url?: string): TabState {
   })
 
   wc.on('did-navigate-in-page', (_, url) => {
+    if (isVirtual()) return
     tab.url = url
     tab.canGoBack = wc.canGoBack()
     tab.canGoForward = wc.canGoForward()
@@ -186,13 +194,16 @@ function closeTab(id: string) {
   }
 }
 
-function resolveURL(raw: string, searchEngine: string): string {
+function resolveURL(raw: string, _searchEngine: string): string {
   const s = raw.trim()
   if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('about:') || s.startsWith('file:')) return s
   if (s.includes('.') && !s.includes(' ') && !s.startsWith('localhost')) return 'https://' + s
   if (s === 'localhost' || s.startsWith('localhost:')) return 'http://' + s
-  return searchEngine.replace('{query}', encodeURIComponent(s))
+  return 'about:search?q=' + encodeURIComponent(s)
 }
+
+import { search as heliosSearch, preconnect as searchPreconnect, configureLocal as configureSearchLocal, clearCache as clearSearchCache } from './search'
+import { initHeadless as initSearchHeadless, disposeHeadless as disposeSearchHeadless } from './search/google-headless'
 
 // ── Downloads ─────────────────────────────────────────────────────────────
 function setupDownloads() {
@@ -241,7 +252,31 @@ function setupIPC() {
     const tab = tabs.get(id)
     if (!tab) return
     const target = resolveURL(url, store.getSettings().search_engine)
-    tab.view.webContents.loadURL(target).catch(() => {})
+    if (target === 'about:newtab' || target === 'about:blank') {
+      tab.url = 'about:newtab'
+      tab.title = 'New Tab'
+      tab.favicon = ''
+      tab.isLoading = false
+      tab.canGoBack = tab.view.webContents.canGoBack()
+      tab.canGoForward = tab.view.webContents.canGoForward()
+      console.log('[helios] navigate → about:newtab')
+      broadcastTabUpdate(id)
+      return
+    }
+    if (target.startsWith('about:search')) {
+      tab.url = target
+      const q = decodeURIComponent(target.split('?q=')[1] || '')
+      tab.title = q ? `${q} — Search` : 'Search'
+      tab.favicon = ''
+      tab.isLoading = false
+      tab.canGoBack = tab.view.webContents.canGoBack()
+      tab.canGoForward = tab.view.webContents.canGoForward()
+      console.log(`[helios] navigate → search "${q}"`)
+      broadcastTabUpdate(id)
+      return
+    }
+    console.log(`[helios] navigate → ${target}`)
+    tab.view.webContents.loadURL(target).catch((e) => console.error('[helios] loadURL failed:', target, e?.message || e))
   })
   ipcMain.handle('tab:back', (_, id: string) => {
     const t = tabs.get(id)
@@ -329,6 +364,85 @@ function setupIPC() {
   })
   ipcMain.handle('assistant:openExternal', (_, url: string) => shell.openExternal(url))
 
+  // Search
+  const activeSearches = new Map<number, { cancel: () => void }>()
+  ipcMain.handle('search:start', (_, args: { query: string; prefetch?: boolean; deepen?: boolean }) => {
+    const handle = heliosSearch(String(args?.query || '').trim(), {
+      prefetch: !!args?.prefetch,
+      deepen: !!args?.deepen,
+      onUpdate: (u) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('search:update', u)
+        }
+      }
+    })
+    activeSearches.set(handle.sessionId, { cancel: handle.cancel })
+    handle.promise.finally(() => activeSearches.delete(handle.sessionId))
+    return { sessionId: handle.sessionId }
+  })
+  ipcMain.handle('search:cancel', (_, sessionId: number) => {
+    const h = activeSearches.get(sessionId)
+    if (h) { h.cancel(); activeSearches.delete(sessionId) }
+  })
+  ipcMain.handle('search:preconnect', () => searchPreconnect())
+  // Bench is dev-only. The handler is registered only in dev builds (the
+  // surrounding `if (__DEV__)` is dead-code-eliminated in production by Vite),
+  // so the channel literally does not exist in shipped builds.
+  if (__DEV__) ipcMain.handle('search:bench', async (_, queries: string[]) => {
+    if (!Array.isArray(queries) || queries.length === 0) return { ok: false, reason: 'empty' }
+    // Wipe cache so cold runs are actually cold even if bench is re-run.
+    clearSearchCache()
+    const rows: Array<{
+      query: string
+      firstPaintMs: number | null
+      finalMs: number
+      cacheHitMs: number | null
+      googleRan: boolean
+      resultCount: number
+      ok: boolean
+      failedReason?: string
+    }> = []
+    for (const q of queries) {
+      // Cold run.
+      let firstPaintMs: number | null = null
+      let googleRan = false
+      const t0 = performance.now()
+      const handle = heliosSearch(q, {
+        forceRefresh: true,
+        onUpdate: (u) => {
+          if (firstPaintMs === null && u.envelope.ok && u.envelope.results.length > 0) {
+            firstPaintMs = u.elapsedMs
+          }
+          if (u.envelope.ok && (u.envelope.sources || []).includes('google')) googleRan = true
+        }
+      })
+      const env = await handle.promise
+      const finalMs = Math.round(performance.now() - t0)
+
+      // Repeat run — should be a cache hit.
+      const t1 = performance.now()
+      await heliosSearch(q, {}).promise
+      const cacheHitMs = Math.round(performance.now() - t1)
+
+      rows.push({
+        query: q,
+        firstPaintMs,
+        finalMs,
+        cacheHitMs,
+        googleRan,
+        resultCount: env.ok ? env.results.length : 0,
+        ok: env.ok,
+        ...(env.ok ? {} : { failedReason: env.reason })
+      })
+    }
+    return { ok: true, rows }
+  })
+  // Compatibility shim — awaits final envelope.
+  ipcMain.handle('search:web', async (_, q: string, _kind?: string) => {
+    const handle = heliosSearch(String(q || '').trim(), {})
+    return handle.promise
+  })
+
   // Auth
   ipcMain.handle('auth:signIn', () => authManager.signIn())
   ipcMain.handle('auth:signOut', () => authManager.signOut())
@@ -337,6 +451,10 @@ function setupIPC() {
   // Chrome layout
   ipcMain.handle('chrome:setSidebarWidth', (_, width: number) => {
     sidebarWidth = Math.max(0, Math.round(width))
+    applyActiveBounds()
+  })
+  ipcMain.handle('chrome:setTopInset', (_, inset: number) => {
+    topInset = Math.max(0, Math.round(inset))
     applyActiveBounds()
   })
   ipcMain.handle('chrome:setContentVisible', (_, visible: boolean) => {
@@ -408,6 +526,11 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => mainWindow!.show())
 
+  mainWindow.on('closed', () => {
+    disposeSearchHeadless()
+    if (process.platform !== 'darwin') app.quit()
+  })
+
   mainWindow.on('resize', applyActiveBounds)
 
   if (isDev) {
@@ -430,13 +553,22 @@ function createWindow() {
 app.whenReady().then(() => {
   store = new Storage(app.getPath('userData'), app.getPath('downloads'))
   authManager = new GoogleAuthManager(store)
+  configureSearchLocal({
+    history: () => store.getHistory(500, 0).map((h) => ({ url: h.url, title: h.title, favicon: h.favicon })),
+    bookmarks: () => store.getBookmarks().map((b) => ({ url: b.url, title: b.title, favicon: b.favicon }))
+  })
   setupDownloads()
   setupIPC()
+  initSearchHeadless()
+  searchPreconnect()
   createWindow()
 })
 
+app.on('before-quit', () => { disposeSearchHeadless() })
+
 app.on('window-all-closed', () => {
   store?.flush()
+  disposeSearchHeadless()
   if (process.platform !== 'darwin') app.quit()
 })
 

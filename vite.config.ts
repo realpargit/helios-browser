@@ -5,19 +5,27 @@ import renderer from 'vite-plugin-electron-renderer'
 import { resolve } from 'path'
 
 const ELECTRON_EXTERNALS = [
-  'electron', 'path', 'fs', 'os', 'url', 'child_process', 'crypto', 'net', 'http', 'express', 'electron-updater'
+  'electron', 'path', 'fs', 'os', 'url', 'child_process', 'crypto', 'net', 'http', 'express', 'electron-updater', 'node-html-parser'
 ]
 
+// Build-time constant: `true` in `vite` dev (`electron:dev`), `false` in
+// `vite build` (`electron:build`). Lets us tree-shake bench/debug code out
+// of production bundles entirely.
+const isDevBuild = process.env.NODE_ENV !== 'production'
+const DEFINES = {
+  __DEV__: JSON.stringify(isDevBuild),
+  'process.env.GOOGLE_CLIENT_ID': JSON.stringify(process.env.GOOGLE_CLIENT_ID || '')
+}
+
 export default defineConfig({
+  define: { __DEV__: JSON.stringify(isDevBuild) },
   plugins: [
     react(),
     electron([
       {
         entry: 'electron/main.ts',
         vite: {
-          define: {
-            'process.env.GOOGLE_CLIENT_ID': JSON.stringify(process.env.GOOGLE_CLIENT_ID || '')
-          },
+          define: DEFINES,
           build: {
             outDir: 'dist-electron',
             rollupOptions: { external: ELECTRON_EXTERNALS }
@@ -28,6 +36,7 @@ export default defineConfig({
         entry: 'electron/preload.ts',
         onstart(options) { options.reload() },
         vite: {
+          define: DEFINES,
           build: {
             outDir: 'dist-electron',
             rollupOptions: { external: ELECTRON_EXTERNALS }

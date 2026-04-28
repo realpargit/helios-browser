@@ -58,6 +58,9 @@ function ForwardIcon() {
 function ReloadIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
 }
+function HomeIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+}
 function StopIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
 }
@@ -84,18 +87,22 @@ function GlobeGlyph() {
 }
 
 export function AddressBar() {
-  const { tabs, activeTabId, bookmarks, history, setUrlBarFocused } = useBrowserStore()
+  const { tabs, activeTabId, bookmarks, history, settings, setUrlBarFocused } = useBrowserStore()
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const h = window.helios
 
   const [inputValue, setInputValue] = useState(activeTab?.url || '')
   const [focused, setFocused] = useState(false)
   const [highlight, setHighlight] = useState(0)
+  const [reloadSpin, setReloadSpin] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!focused && activeTab) {
-      setInputValue(activeTab.url === 'about:newtab' ? '' : activeTab.url)
+      const u = activeTab.url
+      if (u === 'about:newtab') setInputValue('')
+      else if (u.startsWith('about:search')) setInputValue(decodeURIComponent(u.split('?q=')[1] || ''))
+      else setInputValue(u)
     }
   }, [activeTab?.url, focused])
 
@@ -180,14 +187,32 @@ export function AddressBar() {
         <ForwardIcon />
       </RoundBtn>
       <RoundBtn
-        onClick={() => activeTabId && (isLoading ? h.tabs.stop(activeTabId) : h.tabs.reload(activeTabId))}
+        onClick={() => {
+          if (!activeTabId) return
+          if (isLoading) { h.tabs.stop(activeTabId) }
+          else { setReloadSpin((n) => n + 1); h.tabs.reload(activeTabId) }
+        }}
         title={isLoading ? 'Stop' : 'Reload this page'}
       >
-        {isLoading ? <StopIcon /> : <ReloadIcon />}
+        {isLoading
+          ? <span style={{ display: 'inline-flex', animation: 'spin 0.9s linear infinite' }}><ReloadIcon /></span>
+          : <span key={reloadSpin} className="helios-reload-spin" style={{ display: 'inline-flex' }}><ReloadIcon /></span>}
+      </RoundBtn>
+      <RoundBtn
+        onClick={() => {
+          if (!activeTabId) return
+          h.tabs.navigate(activeTabId, 'about:newtab')
+        }}
+        title="Home"
+      >
+        <HomeIcon />
       </RoundBtn>
 
       {/* Omnibox pill */}
       <form
+        key={focused ? 'f' : 'b'}
+        className={focused ? 'helios-omnibox-focused' : ''}
+        data-anim-target="addr"
         onSubmit={handleSubmit}
         onClick={() => inputRef.current?.focus()}
         style={{
@@ -298,6 +323,7 @@ function RoundBtn({ onClick, disabled, title, children }: {
 }) {
   return (
     <button
+      className="helios-navbtn"
       onClick={onClick}
       disabled={disabled}
       title={title}

@@ -6,6 +6,7 @@ import { Sidebar } from './components/Sidebar'
 import { NewTab } from './features/tabs/NewTab'
 import { SettingsPage } from './features/settings/SettingsPage'
 import { Assistant } from './features/assistant/Assistant'
+import { SearchResults } from './features/search/SearchResults'
 import { applyTheme } from './features/settings/themes'
 import type { Tab, Download } from './types'
 
@@ -89,26 +90,46 @@ export default function App() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const showNewTab = !activeTab || activeTab.url === 'about:newtab' || activeTab.url === 'about:blank'
-  const autohide = !!settings?.sidebar_autohide
-  const sidebarWidth = autohide ? 0 : (sidebarPanel ? 328 : 48)
+  const isSearchUrl = !!activeTab?.url?.startsWith('about:search')
+  const searchQuery = isSearchUrl ? decodeURIComponent(activeTab!.url.split('?q=')[1] || '') : ''
 
   useEffect(() => {
-    window.helios?.chrome?.setSidebarWidth(sidebarWidth)
-  }, [sidebarWidth])
+    window.helios?.chrome?.setSidebarWidth(0)
+  }, [])
 
   useEffect(() => {
-    window.helios?.chrome?.setContentVisible(!settingsOpen && !showNewTab)
-  }, [settingsOpen, showNewTab])
+    window.helios?.chrome?.setTopInset(sidebarPanel ? 320 : 0)
+  }, [sidebarPanel])
+
+  useEffect(() => {
+    window.helios?.chrome?.setContentVisible(!settingsOpen && !showNewTab && !isSearchUrl)
+  }, [settingsOpen, showNewTab, isSearchUrl])
 
   useEffect(() => {
     if (settings?.theme) applyTheme(settings.theme, settings.accent_color)
     if (settings?.font_size) document.documentElement.style.fontSize = settings.font_size + 'px'
   }, [settings?.theme, settings?.accent_color, settings?.font_size])
 
+  useEffect(() => {
+    const dim = Math.max(0, Math.min(60, Number(settings?.theme_dim ?? 0)))
+    const root = document.getElementById('root')
+    if (root) root.style.filter = dim > 0 ? `brightness(${(100 - dim) / 100})` : ''
+  }, [settings?.theme_dim])
+
+  useEffect(() => {
+    const r = document.documentElement
+    const master = settings?.animations_enabled !== false
+    r.setAttribute('data-anim-master', master ? 'on' : 'off')
+    r.setAttribute('data-anim-tabs',  master && settings?.animations_tabs        !== false ? 'on' : 'off')
+    r.setAttribute('data-anim-addr',  master && settings?.animations_address_bar !== false ? 'on' : 'off')
+    r.setAttribute('data-anim-btn',   master && settings?.animations_buttons     !== false ? 'on' : 'off')
+    r.setAttribute('data-anim-panel', master && settings?.animations_panels      !== false ? 'on' : 'off')
+  }, [settings?.animations_enabled, settings?.animations_tabs, settings?.animations_address_bar, settings?.animations_buttons, settings?.animations_panels])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-0)' }}>
       <div style={{
-        height: 76,
+        height: 112,
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
@@ -140,24 +161,36 @@ export default function App() {
         )}
         <TabBar />
         <AddressBar />
+        <Sidebar />
       </div>
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <Sidebar />
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         {settingsOpen && <SettingsPage />}
         <Assistant open={assistantOpen} onClose={() => setAssistantOpen(false)} />
         {showNewTab && !settingsOpen && (
           <div style={{
             position: 'absolute',
-            top: 76,
-            left: sidebarWidth,
+            top: 0,
+            left: 0,
             right: 0,
             bottom: 0,
             background: 'var(--bg-0)',
-            zIndex: 10,
-            transition: 'left 0.18s ease'
+            zIndex: 10
           }}>
             <NewTab />
+          </div>
+        )}
+        {isSearchUrl && !settingsOpen && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'var(--bg-0)',
+            zIndex: 10
+          }}>
+            <SearchResults query={searchQuery} />
           </div>
         )}
       </div>

@@ -28,13 +28,20 @@ export function Assistant({ open, onClose }: { open: boolean; onClose: () => voi
     setBusy(true)
     setInput('')
     const userMsg: Msg = await h.assistant.addMessage('user', text)
-    setMessages((m) => [...m, userMsg])
+    const history = [...messages, userMsg]
+    setMessages(history)
     try {
       const result = await runCommand(text)
-      const reply: Msg = await h.assistant.addMessage('assistant', result.reply)
+      let replyText: string
+      if (result.recognized === false) {
+        replyText = await chat(history)
+      } else {
+        replyText = result.reply
+      }
+      const reply: Msg = await h.assistant.addMessage('assistant', replyText)
       setMessages((m) => [...m, reply])
     } catch (err: any) {
-      const reply: Msg = await h.assistant.addMessage('assistant', 'Error: ' + (err?.message || String(err)))
+      const reply: Msg = await h.assistant.addMessage('assistant', friendlyError(err))
       setMessages((m) => [...m, reply])
     } finally {
       setBusy(false)
@@ -182,6 +189,28 @@ export function Assistant({ open, onClose }: { open: boolean; onClose: () => voi
       </div>
     </div>
   )
+}
+
+async function chat(history: Msg[]): Promise<string> {
+  const messages = history.map((m) => ({ role: m.role, content: m.text }))
+  const res = await fetch('http://localhost:11434/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'llama3.1', messages, stream: false })
+  })
+  if (!res.ok) throw new Error(`assistant_unreachable_${res.status}`)
+  const data = await res.json()
+  const text = data?.message?.content?.trim()
+  if (!text) throw new Error('assistant_empty_reply')
+  return text
+}
+
+function friendlyError(err: any): string {
+  const msg = String(err?.message || err || '')
+  if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ECONNREFUSED') || msg.includes('assistant_unreachable')) {
+    return "The assistant is still being installed in the background. Please try again in a moment."
+  }
+  return 'Sorry, something went wrong.'
 }
 
 function Spark() {

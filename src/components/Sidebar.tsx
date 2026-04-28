@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useBrowserStore } from '../store/browserStore'
 import type { SidebarPanel } from '../types'
 import { HistoryPanel } from '../features/history/HistoryPanel'
 import { BookmarksPanel } from '../features/bookmarks/BookmarksPanel'
 import { DownloadsPanel } from '../features/downloads/DownloadsPanel'
 import { UserMenu } from '../features/auth/UserMenu'
+
+const PANEL_HEIGHT = 320
 
 function BookmarkIcon() {
   return (
@@ -62,61 +64,43 @@ const PANEL_COMPONENTS: Record<Exclude<NonNullable<SidebarPanel>, 'settings'>, R
 }
 
 export function Sidebar() {
-  const { sidebarPanel, toggleSidebar, setSettingsOpen, settings } = useBrowserStore()
-  const autohide = !!settings?.sidebar_autohide
-  const [hovered, setHovered] = useState(false)
-  const visible = !autohide || hovered || !!sidebarPanel
+  const { sidebarPanel, toggleSidebar, setSettingsOpen } = useBrowserStore()
+  const panelRef = useRef<HTMLDivElement | null>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    if (!sidebarPanel) return
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (panelRef.current && !panelRef.current.contains(target)) {
+        // Don't close when clicking on the topbar buttons themselves — they handle their own toggle
+        const topbar = document.getElementById('helios-topbar')
+        if (topbar && topbar.contains(target)) return
+        toggleSidebar(sidebarPanel)
+      }
+    }
+    window.addEventListener('mousedown', onDown)
+    return () => window.removeEventListener('mousedown', onDown)
+  }, [sidebarPanel, toggleSidebar])
 
   return (
     <>
-      {/* Edge hover trigger (only in auto-hide mode) */}
-      {autohide && (
-        <div
-          onMouseEnter={() => setHovered(true)}
-          style={{
-            position: 'absolute',
-            top: 76,
-            left: 0,
-            width: 8,
-            bottom: 0,
-            zIndex: 25,
-            background: 'transparent'
-          }}
-        />
-      )}
+      {/* Horizontal nav row — transparent, sits in the chrome below the AddressBar */}
       <div
-        onMouseEnter={() => autohide && setHovered(true)}
-        onMouseLeave={() => autohide && setHovered(false)}
+        id="helios-topbar"
         style={{
-          display: 'flex',
-          height: '100%',
+          height: 36,
           flexShrink: 0,
-          position: autohide ? 'absolute' : 'relative',
-          top: autohide ? 76 : undefined,
-          left: 0,
-          bottom: autohide ? 0 : undefined,
-          zIndex: autohide ? 30 : 'auto',
-          transform: autohide ? `translateX(${visible ? '0' : '-100%'})` : 'none',
-          transition: 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)',
-          boxShadow: autohide && visible ? 'var(--shadow-md)' : 'none',
-          willChange: 'transform'
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          padding: '0 8px',
+          background: 'transparent',
+          WebkitAppRegion: 'no-drag' as any
         }}
       >
-      {/* Icon rail */}
-      <div style={{
-        width: 48,
-        height: '100%',
-        background: 'var(--bg-1)',
-        borderRight: '1px solid var(--border-0)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        paddingTop: 6,
-        gap: 2,
-        flexShrink: 0
-      }}>
         {PANELS.map(({ id, icon, label }) => (
-          <SidebarButton
+          <NavButton
             key={id}
             icon={icon}
             label={label}
@@ -124,91 +108,85 @@ export function Sidebar() {
             onClick={() => toggleSidebar(id)}
           />
         ))}
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 10, gap: 2 }}>
-          <SidebarButton
-            icon={<SparkIcon />}
-            label="Assistant (Ctrl+K)"
-            isActive={false}
-            onClick={() => (window as any).__heliosOpenAssistant?.()}
-          />
-          <SidebarButton
-            icon={<GearIcon />}
-            label="Settings"
-            isActive={false}
-            onClick={() => setSettingsOpen(true)}
-          />
-          <UserMenu />
-        </div>
+        <div style={{ flex: 1 }} />
+        <NavButton
+          icon={<SparkIcon />}
+          label="Assistant (Ctrl+K)"
+          isActive={false}
+          onClick={() => (window as any).__heliosOpenAssistant?.()}
+        />
+        <NavButton
+          icon={<GearIcon />}
+          label="Settings"
+          isActive={false}
+          onClick={() => setSettingsOpen(true)}
+        />
+        <UserMenu />
       </div>
 
-      {/* Animated panel */}
-      <div style={{
-        width: sidebarPanel ? 280 : 0,
-        height: '100%',
-        background: 'var(--bg-1)',
-        borderRight: sidebarPanel ? '1px solid var(--border-0)' : 'none',
-        overflow: 'hidden',
-        transition: 'width var(--transition-mid), border-color var(--transition-mid)',
-        flexShrink: 0,
-        position: 'relative'
-      }}>
+      {/* Floating dropdown panel — overlays the page (BrowserView is pushed down via chrome.setTopInset) */}
+      <div
+        ref={panelRef}
+        data-anim-target="panel"
+        style={{
+          position: 'fixed',
+          top: 112,
+          left: 0,
+          right: 0,
+          height: PANEL_HEIGHT,
+          background: 'var(--bg-1)',
+          borderBottom: '1px solid var(--border-0)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+          overflow: 'hidden',
+          zIndex: 40,
+          transform: sidebarPanel ? 'translateY(0)' : `translateY(-${PANEL_HEIGHT + 8}px)`,
+          opacity: sidebarPanel ? 1 : 0,
+          pointerEvents: sidebarPanel ? 'auto' : 'none',
+          transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease'
+        }}
+      >
         {PANELS.map(({ id }) => (
           <div
             key={id}
             style={{
               position: 'absolute',
               inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              width: 280,
-              opacity: sidebarPanel === id ? 1 : 0,
-              visibility: sidebarPanel === id ? 'visible' : 'hidden',
-              transform: sidebarPanel === id ? 'translateX(0)' : 'translateX(6px)',
-              transition: 'opacity 0.18s cubic-bezier(0,0,0.2,1), transform 0.18s cubic-bezier(0,0,0.2,1)',
-              pointerEvents: sidebarPanel === id ? 'auto' : 'none'
+              display: sidebarPanel === id ? 'flex' : 'none',
+              flexDirection: 'column'
             }}
           >
             {PANEL_COMPONENTS[id]}
           </div>
         ))}
       </div>
-      </div>
     </>
   )
 }
 
-function SidebarButton({ icon, label, isActive, onClick }: {
+function NavButton({ icon, label, isActive, onClick }: {
   icon: React.ReactNode; label: string; isActive: boolean; onClick: () => void
 }) {
   return (
-    <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: 2,
-        height: isActive ? 18 : 0,
-        background: 'var(--accent)',
-        borderRadius: '0 2px 2px 0',
-        transition: 'height 0.18s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s ease',
-        opacity: isActive ? 1 : 0
-      }} />
-      <button
-        onClick={onClick}
-        title={label}
-        style={{
-          width: 36,
-          height: 36,
-          color: isActive ? 'var(--accent)' : 'var(--text-2)',
-          background: isActive ? 'var(--accent-dim)' : 'transparent',
-          borderRadius: 'var(--radius-md)',
-          border: 'none',
-          transition: 'color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast)'
-        }}
-      >
-        {icon}
-      </button>
-    </div>
+    <button
+      onClick={onClick}
+      title={label}
+      style={{
+        height: 28,
+        minWidth: 32,
+        padding: '0 8px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        color: isActive ? 'var(--accent)' : 'var(--text-2)',
+        background: isActive ? 'var(--accent-dim)' : 'transparent',
+        borderRadius: 'var(--radius-md)',
+        border: 'none',
+        WebkitAppRegion: 'no-drag' as any,
+        transition: 'color var(--transition-fast), background var(--transition-fast)'
+      }}
+    >
+      {icon}
+    </button>
   )
 }

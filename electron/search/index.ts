@@ -1,0 +1,5 @@
+export type { SearchEnvelope, StageUpdate, Stage } from './types'
+export { search, preconnect } from './engine'
+export { configureLocal } from './local'
+export type { LocalSource } from './local'
+export { clear as clearCache } from './cache'

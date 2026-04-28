@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useBrowserStore } from '../../store/browserStore'
 import type { Settings } from '../../types'
 import { THEMES } from './themes'
+import logoUrl from '../../assets/logo.png'
 
 type CategoryId =
   | 'general' | 'appearance' | 'search' | 'profile' | 'privacy'
@@ -149,9 +150,6 @@ function GeneralSection({ s, on }: { s: Settings; on: OnChange }) {
           <Select value={s.startup_mode} onChange={(v) => on('startup_mode', v as any)}
             options={[['newtab', 'Open new tab'], ['continue', 'Continue where you left off'], ['homepage', 'Open homepage']]} />
         </Row>
-        <Row label="Homepage URL">
-          <Text value={s.homepage_url} onChange={(v) => on('homepage_url', v)} placeholder="https://..." />
-        </Row>
         <Row label="Restore session on startup">
           <Toggle checked={s.restore_session} onChange={(v) => on('restore_session', v)} />
         </Row>
@@ -208,6 +206,17 @@ function AppearanceSection({ s, on }: { s: Settings; on: OnChange }) {
             onChange={(e) => on('accent_color', e.target.value)}
             style={{ width: 40, height: 24, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }} />
         </Row>
+        <Row label={`Dim browser (${s.theme_dim ?? 0}%)`}>
+          <input
+            type="range"
+            min={0}
+            max={50}
+            step={5}
+            value={s.theme_dim ?? 0}
+            onChange={(e) => on('theme_dim', Number(e.target.value))}
+            style={{ width: 160 }}
+          />
+        </Row>
       </Group>
       <Group title="Fonts">
         <Row label="Font family">
@@ -234,6 +243,35 @@ function AppearanceSection({ s, on }: { s: Settings; on: OnChange }) {
           <Toggle checked={s.sidebar_autohide} onChange={(v) => on('sidebar_autohide', v)} />
         </Row>
       </Group>
+      <Group title="Animations">
+        <Row label="Enable animations">
+          <Toggle checked={s.animations_enabled} onChange={(v) => on('animations_enabled', v)} />
+        </Row>
+        <Row label="Tabs (open / new tab button)">
+          <Toggle
+            checked={s.animations_enabled && s.animations_tabs}
+            onChange={(v) => on('animations_tabs', v)}
+          />
+        </Row>
+        <Row label="Address bar (focus / suggestions)">
+          <Toggle
+            checked={s.animations_enabled && s.animations_address_bar}
+            onChange={(v) => on('animations_address_bar', v)}
+          />
+        </Row>
+        <Row label="Buttons (back / forward / reload / home)">
+          <Toggle
+            checked={s.animations_enabled && s.animations_buttons}
+            onChange={(v) => on('animations_buttons', v)}
+          />
+        </Row>
+        <Row label="Panels & dropdowns">
+          <Toggle
+            checked={s.animations_enabled && s.animations_panels}
+            onChange={(v) => on('animations_panels', v)}
+          />
+        </Row>
+      </Group>
     </Section>
   )
 }
@@ -243,16 +281,7 @@ function SearchSection({ s, on }: { s: Settings; on: OnChange }) {
     <Section title="Search">
       <Group title="Search engine">
         <Row label="Default engine">
-          <Select value={s.search_engine} onChange={(v) => on('search_engine', v)}
-            options={[
-              ['https://www.google.com/search?q={query}','Google'],
-              ['https://www.bing.com/search?q={query}','Bing'],
-              ['https://duckduckgo.com/?q={query}','DuckDuckGo'],
-              ['https://search.brave.com/search?q={query}','Brave Search'],
-              ['https://www.ecosia.org/search?q={query}','Ecosia'],
-              ['https://www.startpage.com/do/search?q={query}','Startpage'],
-              ['https://kagi.com/search?q={query}','Kagi']
-            ]} />
+          <span style={{ fontSize: 12, color: 'var(--text-1)' }}>Google</span>
         </Row>
       </Group>
       <Group title="Address bar">
@@ -551,6 +580,13 @@ function AboutSection() {
 
   return (
     <Section title="About Helios">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '0 12px 16px' }}>
+        <img src={logoUrl} alt="" style={{ width: 56, height: 56, filter: 'drop-shadow(0 4px 14px var(--accent-glow))' }} />
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-0)' }}>Helios Browser</div>
+          <div style={{ fontSize: 12, color: 'var(--text-2)' }}>v{version}</div>
+        </div>
+      </div>
       <Group title="Version">
         <Row label="Helios Browser"><span style={{ fontSize: 12, color: 'var(--text-1)' }}>{version}</span></Row>
         <Row label="Electron runtime"><span style={{ fontSize: 12, color: 'var(--text-1)' }}>latest</span></Row>

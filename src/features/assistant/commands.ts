@@ -52,7 +52,7 @@ const SITES: Record<string, string> = {
 
 const THEMES = ['google','dark','light','midnight','dracula','nord','sepia','ocean','forest','rose','high-contrast']
 
-export type CommandResult = { ok: boolean; reply: string }
+export type CommandResult = { ok: boolean; reply: string; recognized?: boolean }
 
 function resolveSite(name: string): string | null {
   const k = name.toLowerCase().trim()
@@ -213,14 +213,9 @@ export async function runCommand(input: string): Promise<CommandResult> {
   if (direct) {
     const id = await h.tabs.getActive()
     if (id) await h.tabs.navigate(id, direct)
-    return { ok: true, reply: `Opening ${direct}.` }
+    return { ok: true, reply: `Opening ${direct}.`, recognized: true }
   }
 
-  // Fallback: treat as a search query in the active tab
-  const id = await h.tabs.getActive()
-  if (id) {
-    await h.tabs.navigate(id, raw)
-    return { ok: true, reply: `Searching for "${raw}".` }
-  }
-  return { ok: false, reply: 'No active tab.' }
+  // Not a recognized command — let the caller decide (e.g. forward to LLM).
+  return { ok: false, reply: '', recognized: false }
 }

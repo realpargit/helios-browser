@@ -49,7 +49,6 @@ export interface Settings {
   new_tab_url: string
   restore_session: boolean
   startup_mode: 'newtab' | 'continue' | 'homepage'
-  homepage_url: string
   default_browser: boolean
   language: string
 
@@ -62,6 +61,7 @@ export interface Settings {
   compact_ui: boolean
   show_bookmarks_bar: boolean
   sidebar_autohide: boolean
+  theme_dim: number
 
   // Search
   search_suggestions: boolean
@@ -103,6 +103,13 @@ export interface Settings {
   // Extensions
   extensions_enabled: boolean
   allow_extension_store: boolean
+
+  // Animations
+  animations_enabled: boolean
+  animations_tabs: boolean
+  animations_address_bar: boolean
+  animations_buttons: boolean
+  animations_panels: boolean
 
   // System / behavior
   mouse_gestures: boolean

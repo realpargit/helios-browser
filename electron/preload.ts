@@ -101,10 +101,29 @@ const api = {
   },
   chrome: {
     setSidebarWidth: (width: number) => ipcRenderer.invoke('chrome:setSidebarWidth', width),
+    setTopInset: (inset: number) => ipcRenderer.invoke('chrome:setTopInset', inset),
     setContentVisible: (visible: boolean) => ipcRenderer.invoke('chrome:setContentVisible', visible)
   },
   data: {
     clearBrowsing: () => ipcRenderer.invoke('data:clearBrowsing')
+  },
+  search: {
+    web: (query: string, kind?: 'web' | 'news' | 'videos' | 'images'): Promise<{ ok: true; results: Array<{ title: string; url: string; description: string; favicon?: string }>; sources?: string[]; card?: { title: string; description: string; url?: string; thumbnail?: string } } | { ok: false; reason: string }> =>
+      ipcRenderer.invoke('search:web', query, kind || 'web'),
+    start: (query: string, prefetch = false, deepen = false): Promise<{ sessionId: number }> =>
+      ipcRenderer.invoke('search:start', { query, prefetch, deepen }),
+    cancel: (sessionId: number) => ipcRenderer.invoke('search:cancel', sessionId),
+    preconnect: () => ipcRenderer.invoke('search:preconnect'),
+    // Bench is dev-only. The constant is replaced at build time by Vite,
+    // so the entire branch is dead-code-eliminated from production bundles.
+    ...(__DEV__ ? {
+      bench: (queries: string[]) => ipcRenderer.invoke('search:bench', queries)
+    } : {}),
+    onUpdate: (cb: (u: { sessionId: number; query: string; stage: 'cache' | 'fast' | 'full' | 'final'; envelope: any; elapsedMs: number }) => void) => {
+      const handler = (_: Electron.IpcRendererEvent, u: any) => cb(u)
+      ipcRenderer.on('search:update', handler)
+      return () => ipcRenderer.removeListener('search:update', handler)
+    }
   },
   assistant: {
     getMessages: () => ipcRenderer.invoke('assistant:getMessages'),

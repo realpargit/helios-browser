@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useBrowserStore } from '../../store/browserStore'
 import type { Tab } from '../../types'
+import logoUrl from '../../assets/logo.png'
 
 const MAX_TAB_WIDTH = 220
 const MIN_TAB_WIDTH = 80
@@ -40,6 +41,7 @@ export function TabBar() {
           <TabItem key={tab.id} tab={tab} isActive={tab.id === activeTabId} width={tabWidth} />
         ))}
         <button
+          className="helios-newtab-btn"
           onClick={() => h.tabs.create()}
           title="New tab  (Ctrl+T)"
           style={{
@@ -71,6 +73,7 @@ function TabItem({ tab, isActive, width }: { tab: Tab; isActive: boolean; width:
 
   return (
     <div
+      data-anim-target="tab"
       onClick={() => h.tabs.switch(tab.id)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -107,12 +110,9 @@ function TabItem({ tab, isActive, width }: { tab: Tab; isActive: boolean; width:
             animation: 'spin 0.7s linear infinite'
           }} />
         ) : tab.favicon ? (
-          <img src={tab.favicon} width={14} height={14} style={{ borderRadius: 2, display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          <img src={tab.favicon} width={14} height={14} style={{ borderRadius: 2, display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).src = logoUrl }} />
         ) : (
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <rect width="13" height="13" rx="2" fill="var(--border-2)" />
-            <circle cx="6.5" cy="6.5" r="2.8" stroke="var(--text-2)" strokeWidth="1.2" />
-          </svg>
+          <img src={logoUrl} width={14} height={14} style={{ borderRadius: 2, display: 'block' }} />
         )}
       </div>
 

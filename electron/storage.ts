@@ -51,7 +51,6 @@ export interface SettingsMap {
   new_tab_url: string
   restore_session: boolean
   startup_mode: 'newtab' | 'continue' | 'homepage'
-  homepage_url: string
   default_browser: boolean
   language: string
   theme: string
@@ -62,6 +61,7 @@ export interface SettingsMap {
   compact_ui: boolean
   show_bookmarks_bar: boolean
   sidebar_autohide: boolean
+  theme_dim: number
   search_suggestions: boolean
   address_bar_history: boolean
   autocomplete: boolean
@@ -92,6 +92,11 @@ export interface SettingsMap {
   tab_close_behavior: 'last-active' | 'left' | 'right' | 'newtab'
   confirm_close_multiple: boolean
   smooth_scroll: boolean
+  animations_enabled: boolean
+  animations_tabs: boolean
+  animations_address_bar: boolean
+  animations_buttons: boolean
+  animations_panels: boolean
   download_path: string
   ask_download_location: boolean
   open_pdfs_externally: boolean
@@ -150,7 +155,6 @@ export class Storage {
         new_tab_url: 'about:newtab',
         restore_session: true,
         startup_mode: 'newtab',
-        homepage_url: 'https://www.google.com',
         default_browser: false,
         language: 'en-US',
         theme: 'google',
@@ -161,6 +165,7 @@ export class Storage {
         compact_ui: false,
         show_bookmarks_bar: false,
         sidebar_autohide: true,
+        theme_dim: 0,
         search_suggestions: true,
         address_bar_history: true,
         autocomplete: true,
@@ -191,6 +196,11 @@ export class Storage {
         tab_close_behavior: 'last-active',
         confirm_close_multiple: true,
         smooth_scroll: true,
+        animations_enabled: true,
+        animations_tabs: true,
+        animations_address_bar: true,
+        animations_buttons: true,
+        animations_panels: true,
         download_path: downloadsPath,
         ask_download_location: false,
         open_pdfs_externally: false,
